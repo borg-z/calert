@@ -3,7 +3,7 @@ package notifier
 import (
 	"fmt"
 
-	"github.com/mr-karan/calert/internal/providers"
+	"github.com/borg-z/calert/internal/providers"
 	alertmgrtmpl "github.com/prometheus/alertmanager/template"
 	"github.com/sirupsen/logrus"
 )

@@ -9,7 +9,7 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/mr-karan/calert/internal/metrics"
+	"github.com/borg-z/calert/internal/metrics"
 	alertmgrtmpl "github.com/prometheus/alertmanager/template"
 	"github.com/sirupsen/logrus"
 )
@@ -43,6 +43,7 @@ func NewGoogleChat(opts GoogleChatOpts) (*GoogleChatManager, error) {
 	transport := &http.Transport{
 		MaxIdleConnsPerHost: opts.MaxIdleConn,
 	}
+	
 
 	// Add a proxy to make upstream requests if specified in config.
 	if opts.ProxyURL != "" {
@@ -67,6 +68,10 @@ func NewGoogleChat(opts GoogleChatOpts) (*GoogleChatManager, error) {
 		"Title":    strings.Title,
 		"toUpper":  strings.ToUpper,
 		"Contains": strings.Contains,
+		"Urlencode": url.QueryEscape,
+		"Replace": func(old, new, s string) string {
+			return strings.ReplaceAll(s, old, new)
+		},
 	}
 
 	// Load the template.

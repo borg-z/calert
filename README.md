@@ -12,7 +12,7 @@ _Send Alertmanager notifications to Google Chat (and more!)_
 
 ### Binary
 
-Grab the latest release from [Releases](https://github.com/mr-karan/calert/releases).
+Grab the latest release from [Releases](https://github.com/borg-z/calert/releases).
 
 To run:
 
@@ -22,17 +22,17 @@ To run:
 
 ### Docker
 
-You can find the list of docker images [here](https://github.com/mr-karan/calert/pkgs/container/calert)
+You can find the list of docker images [here](https://github.com/borg-z/calert/pkgs/container/calert)
 
 ```
-docker pull ghcr.io/mr-karan/calert:latest
+docker pull ghcr.io/borg-z/calert:latest
 ```
 
 Here's an example `docker-compose` config with a custom `message.tmpl` mounted inside the container:
 
 ```yml
   calert:
-    image: ghcr.io/mr-karan/calert:latest
+    image: ghcr.io/borg-z/calert:latest
     ports:
       - "6000:6000"
     volumes:

@@ -5,14 +5,14 @@ import (
 	"os"
 	"strings"
 
+	"github.com/borg-z/calert/internal/metrics"
+	"github.com/borg-z/calert/internal/notifier"
+	prvs "github.com/borg-z/calert/internal/providers"
+	"github.com/borg-z/calert/internal/providers/google_chat"
 	"github.com/knadh/koanf"
 	"github.com/knadh/koanf/parsers/toml"
 	"github.com/knadh/koanf/providers/env"
 	"github.com/knadh/koanf/providers/file"
-	"github.com/mr-karan/calert/internal/metrics"
-	"github.com/mr-karan/calert/internal/notifier"
-	prvs "github.com/mr-karan/calert/internal/providers"
-	"github.com/mr-karan/calert/internal/providers/google_chat"
 	"github.com/sirupsen/logrus"
 	flag "github.com/spf13/pflag"
 )

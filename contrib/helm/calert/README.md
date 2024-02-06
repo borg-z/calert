@@ -4,7 +4,7 @@
 
 A Helm chart for the calert which uses Alertmanager webhook receiver to receive alerts payload, and pushes this data to Google Chat webhook endpoint.
 
-**Source Code:** <https://github.com/mr-karan/calert>
+**Source Code:** <https://github.com/borg-z/calert>
 
 # Alertmanager Integration
 
@@ -40,7 +40,7 @@ Change the values according to the need of the environment in ``contrib/helm/cal
 | providers | object | `{}` |  |
 | templates | object | `{}` |  |
 | replicaCount | int | `1` |  |
-| image.repository | string | `"ghcr.io/mr-karan/calert"` |  |
+| image.repository | string | `"ghcr.io/borg-z/calert"` |  |
 | image.tag | string | `"v2.0.2"` |  |
 | image.pullPolicy | string | `"Always"` |  |
 | args[0] | string | `"--config=/app/static/config.toml"` |  |

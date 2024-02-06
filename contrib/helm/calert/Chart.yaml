@@ -10,11 +10,11 @@ keywords:
   - alertmanager
   - alertmanager-webhook
   - google-chat
-home: https://github.com/mr-karan/calert
+home: https://github.com/borg-z/calert
 sources:
-  - https://github.com/mr-karan/calert
+  - https://github.com/borg-z/calert
 maintainers:
   - name: Karan Sharma
     email: hello@mrkaran.dev
-    url: https://github.com/mr-karan
+    url: https://github.com/borg-z
 appVersion: 0.0.0-dev

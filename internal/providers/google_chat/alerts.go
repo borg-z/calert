@@ -4,8 +4,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/borg-z/calert/internal/metrics"
 	"github.com/gofrs/uuid"
-	"github.com/mr-karan/calert/internal/metrics"
 	alertmgrtmpl "github.com/prometheus/alertmanager/template"
 	"github.com/sirupsen/logrus"
 )

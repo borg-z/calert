@@ -1,7 +1,7 @@
 services:
   calert:
     container_name: calert
-    image: ghcr.io/mr-karan/calert:latest
+    image: ghcr.io/borg-z/calert:latest
     ports:
       - 6000:6000
     command:

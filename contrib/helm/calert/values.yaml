@@ -9,7 +9,7 @@ app:
   enable_request_logs: true # Whether to log incoming HTTP requests or not.
   log: "info" # Use `debug` to enable verbose logging. Can be set to `info` otherwise.
 
-# https://github.com/mr-karan/calert/blob/main/config.sample.toml
+# https://github.com/borg-z/calert/blob/main/config.sample.toml
 providers: {}
   # prod_alerts:
   #   type: "google_chat" # Type of provider. Currently supported value is `google_chat`.
@@ -45,7 +45,7 @@ templates: {}
 replicaCount: 1
 
 image:
-  repository: ghcr.io/mr-karan/calert
+  repository: ghcr.io/borg-z/calert
   tag: v2.0.2
   pullPolicy: Always
 

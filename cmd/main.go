@@ -3,10 +3,10 @@ package main
 import (
 	"net/http"
 
+	"github.com/borg-z/calert/internal/metrics"
+	"github.com/borg-z/calert/internal/notifier"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
-	"github.com/mr-karan/calert/internal/metrics"
-	"github.com/mr-karan/calert/internal/notifier"
 
 	"github.com/sirupsen/logrus"
 )
