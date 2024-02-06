@@ -33,23 +33,3 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  helmreleaser:
-    permissions:
-      contents: write
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Publish Helm chart
-        uses: stefanprodan/helm-gh-pages@v1.7.0
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          charts_dir: contrib/helm
-          branch: gh-pages
-          target_dir: charts
-          app_version: ${{ github.ref_name }}
-          chart_version: ${{ github.ref_name }}
