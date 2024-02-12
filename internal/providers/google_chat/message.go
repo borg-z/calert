@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	alertmgrtmpl "github.com/prometheus/alertmanager/template"
 )
@@ -16,6 +17,11 @@ import (
 const (
 	maxMsgSize = 4096
 )
+
+var excludedLabels = map[string]bool{
+	"alertname": true,
+	"severity":  true,
+}
 
 func prepareGrafanaUrl(alert alertmgrtmpl.Alert) (string, error) {
 
@@ -33,13 +39,23 @@ func prepareGrafanaUrl(alert alertmgrtmpl.Alert) (string, error) {
 
 	var labelParts []string
 	for k, v := range labels {
-		part := fmt.Sprintf(`%s=\"%s\"`, k, v)
+		if _, excluded := excludedLabels[k]; excluded {
+			continue
+		}
+		part := fmt.Sprintf(`%s="%s"`, k, v)
 		labelParts = append(labelParts, part)
 	}
+
 	labelsString := "{" + strings.Join(labelParts, ",") + "}"
 	escapedLabels := url.QueryEscape(labelsString)
-	panesValue := fmt.Sprintf(`{"xph":{"datasource":"%s","queries":[{"refId":"A","expr":"%s","queryType":"range","datasource":{"type":"loki","uid":"%s"},"editorMode":"code"}],"range":{"from":"now-5m","to":"now"}}}`, grafanaDS, escapedLabels, grafanaDS)
-	finalURL := fmt.Sprintf("%s/explore?schemaVersion=1&panes=%s&orgId=1", grafanaURL, panesValue)
+
+	now := time.Now()
+
+	fiveMinutes := int64(5 * 60 * 1000)
+	from := now.Add(-time.Duration(fiveMinutes)*time.Millisecond).UnixNano() / 1e6
+	to := now.Add(time.Duration(fiveMinutes)*time.Millisecond).UnixNano() / 1e6
+
+	panesValue := fmt.Sprintf(`{"xph":{"datasource":"%s","queries":[{"refId":"A","expr":"%s","queryType":"range","datasource":{"type":"loki","uid":"%s"},"editorMode":"code"}],"range":{"from":"%d","to":"%d"}}}`, grafanaDS, escapedLabels, grafanaDS, from, to)	finalURL := fmt.Sprintf("%s/explore?schemaVersion=1&panes=%s&orgId=1", grafanaURL, panesValue)
 	encodedFinalURL := strings.ReplaceAll(finalURL, "\"", "%22")
 	return encodedFinalURL, nil
 }
