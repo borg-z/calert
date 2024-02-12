@@ -48,14 +48,14 @@ func prepareGrafanaUrl(alert alertmgrtmpl.Alert) (string, error) {
 
 	labelsString := "{" + strings.Join(labelParts, ",") + "}"
 	escapedLabels := url.QueryEscape(labelsString)
-
+	q := fmt.Sprintf("%s  |~ `(?i)error`", escapedLabels)
 	now := time.Now()
 
 	fiveMinutes := int64(5 * 60 * 1000)
 	from := now.Add(-time.Duration(fiveMinutes)*time.Millisecond).UnixNano() / 1e6
 	to := now.Add(time.Duration(fiveMinutes)*time.Millisecond).UnixNano() / 1e6
 
-	panesValue := fmt.Sprintf(`{"xph":{"datasource":"%s","queries":[{"refId":"A","expr":"%s","queryType":"range","datasource":{"type":"loki","uid":"%s"},"editorMode":"code"}],"range":{"from":"%d","to":"%d"}}}`, grafanaDS, escapedLabels, grafanaDS, from, to)
+	panesValue := fmt.Sprintf(`{"xph":{"datasource":"%s","queries":[{"refId":"A","expr":"%s","queryType":"range","datasource":{"type":"loki","uid":"%s"},"editorMode":"code"}],"range":{"from":"%d","to":"%d"}}}`, grafanaDS, q, grafanaDS, from, to)
 	finalURL := fmt.Sprintf("%s/explore?schemaVersion=1&panes=%s&orgId=1", grafanaURL, panesValue)
 	encodedFinalURL := strings.ReplaceAll(finalURL, "\"", "%22")
 	return encodedFinalURL, nil
