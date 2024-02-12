@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -15,38 +17,90 @@ const (
 	maxMsgSize = 4096
 )
 
-// prepareMessage accepts an Alert object and templates out with the user provided template.
-// It also splits the alerts if the combined size exceeds the limit of 4096 bytes by
-// G-Chat Webhook API
+func prepareGrafanaUrl(alert alertmgrtmpl.Alert) (string, error) {
+
+	grafanaURL, ok := alert.Annotations["grafanaURL"]
+	if !ok {
+		return "", nil
+	}
+
+	grafanaDS, ok := alert.Annotations["grafanaDS"]
+	if !ok {
+		return "", nil
+	}
+
+	labels := alert.Labels
+
+	var labelParts []string
+	for k, v := range labels {
+		part := fmt.Sprintf(`%s=\"%s\"`, k, v)
+		labelParts = append(labelParts, part)
+	}
+	labelsString := "{" + strings.Join(labelParts, ",") + "}"
+	escapedLabels := url.QueryEscape(labelsString)
+	panesValue := fmt.Sprintf(`{"xph":{"datasource":"%s","queries":[{"refId":"A","expr":"%s","queryType":"range","datasource":{"type":"loki","uid":"%s"},"editorMode":"code"}],"range":{"from":"now-5m","to":"now"}}}`, grafanaDS, escapedLabels, grafanaDS)
+	finalURL := fmt.Sprintf("%s/explore?schemaVersion=1&panes=%s&orgId=1", grafanaURL, panesValue)
+	encodedFinalURL := strings.ReplaceAll(finalURL, "\"", "%22")
+	return encodedFinalURL, nil
+}
+
 func (m *GoogleChatManager) prepareMessage(alert alertmgrtmpl.Alert) ([]ChatMessage, error) {
-	var (
-		str strings.Builder
-		to  bytes.Buffer
-		msg ChatMessage
-	)
+
+	grafanaUrl, _ := prepareGrafanaUrl(alert)
+
+	msg := ChatMessage{
+		CardsV2: []CardV2{
+			{
+				CardId: "unique-card-id",
+				Card: CardDetail{
+					Header: Header{
+						Title:    "🔥 " + alert.Annotations["title"],
+						Subtitle: alert.Annotations["description"],
+						ImageUrl: "https://grafana.com/static/assets/img/fav32.png",
+					},
+					Sections: []Section{
+						{
+							Header:                    "Summary",
+							Collapsible:               true,
+							UncollapsibleWidgetsCount: 1,
+							Widgets: func() []Widget {
+								var widgets []Widget
+								if len(grafanaUrl) > 0 {
+									grafanaButton := Widget{
+										ButtonList: &ButtonList{
+											Buttons: []Button{
+												{
+													Text: "Grafana",
+													OnClick: OnClick{
+														OpenLink: OpenLink{
+															URL: grafanaUrl,
+														},
+													},
+												},
+											},
+										},
+									}
+									widgets = append(widgets, grafanaButton)
+								}
+								for key, value := range alert.Labels {
+									widget := Widget{
+										DecoratedText: &DecoratedText{
+											StartIcon: StartIcon{KnownIcon: "DESCRIPTION"},
+											Text:      fmt.Sprintf("%s: %s", key, value),
+										},
+									}
+									widgets = append(widgets, widget)
+								}
+								return widgets
+							}(),
+						},
+					},
+				},
+			},
+		},
+	}
 
 	messages := make([]ChatMessage, 0)
-
-	// Render a template with alert data.
-	err := m.msgTmpl.Execute(&to, alert)
-	if err != nil {
-		m.lo.WithError(err).Error("Error parsing values in template")
-		return messages, err
-	}
-
-	// Split the message if it exceeds the limit.
-	if (len(str.String()) + len(to.String())) >= maxMsgSize {
-		msg.Text = str.String()
-		messages = append(messages, msg)
-		str.Reset()
-	}
-
-	// Convert the template bytes to string.
-	str.WriteString(to.String())
-	str.WriteString("\n")
-	msg.Text = str.String()
-
-	// Add the message to batch.
 	messages = append(messages, msg)
 
 	return messages, nil
@@ -58,6 +112,7 @@ func (m *GoogleChatManager) sendMessage(msg ChatMessage, threadKey string) error
 	if err != nil {
 		return err
 	}
+	fmt.Println(string(out))
 
 	// Parse the webhook URL to add `?threadKey` param.
 	u, err := url.Parse(m.endpoint)
@@ -77,16 +132,24 @@ func (m *GoogleChatManager) sendMessage(msg ChatMessage, threadKey string) error
 	req.Header.Set("Content-Type", "application/json")
 
 	// Send the request.
-	m.lo.WithField("url", endpoint).WithField("msg", msg.Text).Debug("sending alert")
+	m.lo.WithField("url", endpoint).WithField("msg", msg).Debug("sending alert")
 	resp, err := m.client.Do(req)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
 
-	// If response is non 200, log and throw the error.
 	if resp.StatusCode != http.StatusOK {
 		m.lo.WithField("status", resp.StatusCode).Error("Non OK HTTP Response received from Google Chat Webhook endpoint")
+
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return errors.New("error reading response from gchat")
+		}
+
+		bodyString := string(bodyBytes)
+		fmt.Println(bodyString)
+
 		return errors.New("non ok response from gchat")
 	}
 

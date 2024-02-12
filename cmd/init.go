@@ -99,7 +99,6 @@ func initProviders(ko *koanf.Koanf, lo *logrus.Logger, metrics *metrics.Manager)
 					ProxyURL:    ko.String(fmt.Sprintf("%s.proxy_url", cfgKey)),
 					Endpoint:    ko.MustString(fmt.Sprintf("%s.endpoint", cfgKey)),
 					Room:        name,
-					Template:    ko.MustString(fmt.Sprintf("%s.template", cfgKey)),
 					ThreadTTL:   ko.MustDuration(fmt.Sprintf("%s.thread_ttl", cfgKey)),
 					Metrics:     metrics,
 					DryRun:      ko.Bool(fmt.Sprintf("%s.dry_run", cfgKey)),

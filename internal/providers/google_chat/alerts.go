@@ -29,8 +29,63 @@ type AlertDetails struct {
 // ChatMessage represents the structure for sending a
 // Text message in Google Chat Webhook endpoint.
 // https://developers.google.com/chat/api/guides/message-formats/basic
+
 type ChatMessage struct {
-	Text string `json:"text"`
+	CardsV2 []CardV2 `json:"cardsV2"`
+}
+
+type CardV2 struct {
+	CardId string     `json:"cardId"`
+	Card   CardDetail `json:"card"`
+}
+
+type CardDetail struct {
+	Header   Header    `json:"header"`
+	Sections []Section `json:"sections"`
+}
+
+type Header struct {
+	Title    string `json:"title"`
+	Subtitle string `json:"subtitle"`
+	ImageUrl string `json:"imageUrl"`
+}
+
+type Section struct {
+	Header                    string   `json:"header"`
+	Collapsible               bool     `json:"collapsible"`
+	UncollapsibleWidgetsCount int      `json:"uncollapsibleWidgetsCount"`
+	Widgets                   []Widget `json:"widgets"`
+}
+
+type Widget struct {
+	DecoratedText *DecoratedText `json:"decoratedText,omitempty"`
+	ButtonList    *ButtonList    `json:"buttonList,omitempty"`
+}
+
+type DecoratedText struct {
+	StartIcon StartIcon `json:"startIcon"`
+	Text      string    `json:"text"`
+}
+
+type StartIcon struct {
+	KnownIcon string `json:"knownIcon"`
+}
+
+type ButtonList struct {
+	Buttons []Button `json:"buttons"`
+}
+
+type Button struct {
+	Text    string  `json:"text"`
+	OnClick OnClick `json:"onClick"`
+}
+
+type OnClick struct {
+	OpenLink OpenLink `json:"openLink"`
+}
+
+type OpenLink struct {
+	URL string `json:"url"`
 }
 
 // add adds an alert to the active alerts map.

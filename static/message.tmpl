@@ -1,4 +1,7 @@
-*({{.Labels.severity | toUpper }}) {{ .Labels.alertname | Title }} - {{.Status | Title }}*
-{{ range .Annotations.SortedPairs -}}
-{{ .Name | Title }}: {{ .Value}}
-{{ end -}}
+{{ if eq .Labels.severity "critical" }}🚨{{ else if eq .Labels.severity "high" }}🔴{{ else if eq .Labels.severity "warning" }}🟠{{ else if eq .Labels.severity "info" }}🟡{{ else if eq .Labels.severity "none" }}🟢{{ else }}🔵{{ end }}{{ if .Labels.severity }}{{ .Labels.severity | toUpper }}{{ else }}NONE{{ end }} *{{ .Labels.alertname }}* - {{ if eq .Status "firing" }}🔥{{ else }}✅{{ end }} {{ .Status | Title }}
+
+🔍 *Details:* {{ if .Annotations.description }}```{{ .Annotations.description }}```{{ else }}N/A{{ end }}
+*Labels:*{{ range $key, $value := .Labels }}{{ if not (or (eq $key "alertgroup") (eq $key "dashboard_url") (eq $key "alertstate") (eq $key "severity") (eq $key "alertname")) }}
+🏷️*{{ $key }}*: `{{ $value }}`
+{{ end }}{{ end }}
+{{(GrafanaURL .Labels .Annotations.grafanaURL  .Annotations.grafanaDS)}}

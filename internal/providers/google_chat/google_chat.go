@@ -4,9 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"path/filepath"
-	"strings"
-	"text/template"
 	"time"
 
 	"github.com/borg-z/calert/internal/metrics"
@@ -21,7 +18,6 @@ type GoogleChatManager struct {
 	endpoint     string
 	room         string
 	client       *http.Client
-	msgTmpl      *template.Template
 	dryRun       bool
 }
 
@@ -34,7 +30,6 @@ type GoogleChatOpts struct {
 	ProxyURL    string
 	Endpoint    string
 	Room        string
-	Template    string
 	ThreadTTL   time.Duration
 }
 
@@ -43,7 +38,6 @@ func NewGoogleChat(opts GoogleChatOpts) (*GoogleChatManager, error) {
 	transport := &http.Transport{
 		MaxIdleConnsPerHost: opts.MaxIdleConn,
 	}
-	
 
 	// Add a proxy to make upstream requests if specified in config.
 	if opts.ProxyURL != "" {
@@ -63,22 +57,28 @@ func NewGoogleChat(opts GoogleChatOpts) (*GoogleChatManager, error) {
 	// Initialise the map of active alerts.
 	alerts := make(map[string]AlertDetails, 0)
 
-	// Initialise message template functions.
-	templateFuncMap := template.FuncMap{
-		"Title":    strings.Title,
-		"toUpper":  strings.ToUpper,
-		"Contains": strings.Contains,
-		"Urlencode": url.QueryEscape,
-		"Replace": func(old, new, s string) string {
-			return strings.ReplaceAll(s, old, new)
-		},
-	}
-
-	// Load the template.
-	tmpl, err := template.New(filepath.Base(opts.Template)).Funcs(templateFuncMap).ParseFiles(opts.Template)
-	if err != nil {
-		return nil, err
-	}
+	// templateFuncMap := template.FuncMap{
+	// 	"Title":     strings.Title,
+	// 	"toUpper":   strings.ToUpper,
+	// 	"Contains":  strings.Contains,
+	// 	"Urlencode": url.QueryEscape,
+	// 	"Replace": func(old, new, s string) string {
+	// 		return strings.ReplaceAll(s, old, new)
+	// 	},
+	// 	"GrafanaURL": func(labels alertmgrtmpl.KV, grafanaURL string, grafanaDS string) (string, error) {
+	// 		var labelParts []string
+	// 		for k, v := range labels {
+	// 			part := fmt.Sprintf(`%s=\"%s\"`, k, v)
+	// 			labelParts = append(labelParts, part)
+	// 		}
+	// 		labelsString := "{" + strings.Join(labelParts, ",") + "}"
+	// 		escapedLabels := url.QueryEscape(labelsString)
+	// 		panesValue := fmt.Sprintf(`{"xph":{"datasource":"%s","queries":[{"refId":"A","expr":"%s","queryType":"range","datasource":{"type":"loki","uid":"%s"},"editorMode":"code"}],"range":{"from":"now-5m","to":"now"}}}`, grafanaDS, escapedLabels, grafanaDS)
+	// 		finalURL := fmt.Sprintf("%s/explore?schemaVersion=1&panes=%s&orgId=1", grafanaURL, panesValue)
+	// 		encodedFinalURL := strings.ReplaceAll(finalURL, "\"", "%22")
+	// 		return encodedFinalURL, nil
+	// 	},
+	// }
 
 	mgr := &GoogleChatManager{
 		lo:       opts.Log,
@@ -91,8 +91,7 @@ func NewGoogleChat(opts GoogleChatOpts) (*GoogleChatManager, error) {
 			lo:      opts.Log,
 			metrics: opts.Metrics,
 		},
-		msgTmpl: tmpl,
-		dryRun:  opts.DryRun,
+		dryRun: opts.DryRun,
 	}
 	// Start a background worker to cleanup alerts based on TTL mechanism.
 	go mgr.activeAlerts.startPruneWorker(1*time.Hour, opts.ThreadTTL)
