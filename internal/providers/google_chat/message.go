@@ -42,7 +42,7 @@ func prepareGrafanaUrl(alert alertmgrtmpl.Alert) (string, error) {
 		if _, excluded := excludedLabels[k]; excluded {
 			continue
 		}
-		part := fmt.Sprintf(`%s="%s"`, k, v)
+		part := fmt.Sprintf(`%s=\"%s\"`, k, v)
 		labelParts = append(labelParts, part)
 	}
 
